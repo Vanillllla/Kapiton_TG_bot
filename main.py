@@ -9,7 +9,8 @@ from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, ReplyKeyboardRemo
 from aiogram.utils.keyboard import ReplyKeyboardBuilder
 
 from config import config
-
+from data_work import DataWork
+db = DataWork()
 
 class BotStates(StatesGroup):
     """Состояния бота"""
@@ -170,9 +171,11 @@ if __name__ == '__main__':
     # Выберите одну из версий бота:
 
     # Версия с обычными кнопками
+    db.connect()
     bot = ButtonBot()
 
     # Или версия с инлайн-кнопками
     # bot = InlineButtonBot()
 
     asyncio.run(bot.run())
+    db.close()

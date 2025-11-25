@@ -10,6 +10,10 @@ class Config:
 
     # База данных
     BOT_TOKEN = os.getenv('BOT_TOKEN')
+    SQL_SERVER = os.getenv("SQL_SERVER")
+    SQL_DATABASE = os.getenv("SQL_DATABASE")
+    SQL_USER = os.getenv("SQL_USER")
+    SQL_PASSWORD = os.getenv("SQL_PASSWORD")
 
 
     @classmethod
