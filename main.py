@@ -13,6 +13,7 @@ from config import config
 class BotStates(StatesGroup):
     """Состояния бота"""
     choosing = State()
+    lovers = State()
 
 
 class ButtonBot:
@@ -42,6 +43,13 @@ class ButtonBot:
             ]
         )
 
+        self.keyboard_lovers = InlineKeyboardMarkup(
+            inline_keyboard=[
+                [InlineKeyboardButton(text="Добавить", callback_data="plus"), InlineKeyboardButton(text="Удалить", callback_data="minus")],
+                [InlineKeyboardButton(text="Закрыть меню", callback_data="home")],
+            ]
+        )
+
         self.keyboard_main = ReplyKeyboardMarkup(
             keyboard=[
                 [KeyboardButton(text="Моя статистика"), KeyboardButton(text="Избранные")],
@@ -59,9 +67,11 @@ class ButtonBot:
 
         # Обработка кнопок в состоянии choosing
         self.router.message.register(self.info, F.text == "Информация", StateFilter(BotStates.choosing))
+        self.router.message.register(self.lovers, F.text == "Избранные", StateFilter(BotStates.choosing))
         self.router.message.register(self.teg_input, StateFilter(BotStates.choosing))
 
         self.router.callback_query.register(self.handle_callback, StateFilter(BotStates.choosing))
+        self.router.callback_query.register(self.handle_callback_lovers, StateFilter(BotStates.lovers))
 
         # Любое сообщение без состояния
         self.router.message.register(self.any_message)
@@ -72,6 +82,25 @@ class ButtonBot:
         await message.answer("Я РЫЦАРЬ!",reply_markup=self.keyboard_main)
         await state.set_state(BotStates.choosing)
 
+    async def lovers(self, message: types.Message, state: FSMContext):
+        await message.answer("Тут список", reply_markup=self.keyboard_lovers)
+        await state.set_state(BotStates.lovers)
+
+    async def handle_callback_lovers(self, callback: types.CallbackQuery, state: FSMContext):
+        if callback.data == "plus":
+            await callback.message.edit_text(text="Ведите персонажа которого хотите добавить в избранные :")
+
+            print("plus")
+        elif callback.data == "minus":
+            await callback.message.edit_text(text="Ведите персонажа которого хотите удалить из избранных :")
+
+            print("minus")
+        elif callback.data == "home":
+            await callback.message.delete()
+            print("home")
+            await state.set_state(BotStates.choosing)
+        await callback.answer()
+
     async def teg_input(self, message: types.Message, state: FSMContext):
         text = message.text
         if text[0] == "@":
@@ -79,6 +108,7 @@ class ButtonBot:
             await message.answer(f"Что сделать с этим {text} ?", reply_markup=self.keyboard_kapiton)
         else:
             await message.answer("Что ты несёшь!?")
+
 
     async def handle_callback(self, callback: types.CallbackQuery):
         """Обработчик нажатий на инлайн-кнопки"""
@@ -101,6 +131,7 @@ class ButtonBot:
 
     async def info(self, message: types.Message, state: FSMContext):
         """Обработчик кнопки Информация"""
+        await message.answer("*ПОЛЕЗНАЯ ИНФОРМАЦИЯ*")
 
     async def any_message(self, message: types.Message):
         """Обработчик любого сообщения без состояния"""
