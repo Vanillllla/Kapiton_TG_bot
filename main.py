@@ -26,6 +26,8 @@ class ButtonBot:
         self.setup_handlers()
         self.dp.include_router(self.router)
 
+        self.last_message = None
+
         # Клавиатуры:
 
 
@@ -59,6 +61,7 @@ class ButtonBot:
         self.router.message.register(self.info, F.text == "Информация", StateFilter(BotStates.choosing))
         self.router.message.register(self.teg_input, StateFilter(BotStates.choosing))
 
+        self.router.callback_query.register(self.handle_callback, StateFilter(BotStates.choosing))
 
         # Любое сообщение без состояния
         self.router.message.register(self.any_message)
@@ -77,6 +80,25 @@ class ButtonBot:
         else:
             await message.answer("Что ты несёшь!?")
 
+    async def handle_callback(self, callback: types.CallbackQuery):
+        """Обработчик нажатий на инлайн-кнопки"""
+        if callback.data == "give_1":
+            await callback.message.edit_text("<b>Выдан</b> 1 капитон! ", parse_mode="html")
+
+        elif callback.data == "give_3":
+            await callback.message.edit_text("<b>Выдано</b> 3 капитона! ", parse_mode="html")
+
+        elif callback.data == "take_1":
+            await callback.message.edit_text("<b>Изнят</b> 1 капитон!", parse_mode="html")
+
+        elif callback.data == "take_2":
+            await callback.message.edit_text("<b>Изнято</b> 2 капитона!", parse_mode="html")
+
+        elif callback.data == "otmena":
+            await callback.message.edit_text("ок...")
+
+        await callback.answer()
+
     async def info(self, message: types.Message, state: FSMContext):
         """Обработчик кнопки Информация"""
 
@@ -89,16 +111,7 @@ class ButtonBot:
         print("Бот запущен на aiogram...")
         await self.dp.start_polling(self.bot)
 
-    async def handle_callback(self, callback: types.CallbackQuery):
-        """Обработчик нажатий на инлайн-кнопки"""
-        if callback.data == "button1":
-            await callback.message.edit_text("Вы нажали Кнопку 1! ✅")
-        elif callback.data == "button2":
-            await callback.message.edit_text("Вы выбрали Кнопку 2! 🚀")
-        elif callback.data == "info":
-            await callback.message.edit_text("Это асинхронный бот на aiogram с инлайн-кнопками!")
 
-        await callback.answer()
 
 
 
