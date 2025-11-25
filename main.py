@@ -156,6 +156,7 @@ class ButtonBot:
     async def info(self, message: types.Message, state: FSMContext):
         """Обработчик кнопки Информация"""
         await message.answer("*ПОЛЕЗНАЯ ИНФОРМАЦИЯ*")
+        print(await db.get_columns("users"))
 
     async def any_message(self, message: types.Message):
         """Обработчик любого сообщения без состояния"""
@@ -163,19 +164,21 @@ class ButtonBot:
 
     async def run(self):
         """Запускает бота"""
+        await db.connect()
+
         print("Бот запущен на aiogram...")
         await self.dp.start_polling(self.bot)
 
+        await db.close()
 
 if __name__ == '__main__':
     # Выберите одну из версий бота:
 
     # Версия с обычными кнопками
-    db.connect()
+
     bot = ButtonBot()
 
     # Или версия с инлайн-кнопками
     # bot = InlineButtonBot()
 
     asyncio.run(bot.run())
-    db.close()
