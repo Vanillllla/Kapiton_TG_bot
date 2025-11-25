@@ -4,7 +4,8 @@ from aiogram import Bot, Dispatcher, types, F, Router
 from aiogram.filters import Command, StateFilter
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
-from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, ReplyKeyboardRemove, InlineKeyboardMarkup, InlineKeyboardButton
+from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, ReplyKeyboardRemove, InlineKeyboardMarkup, \
+    InlineKeyboardButton
 from aiogram.utils.keyboard import ReplyKeyboardBuilder
 
 from config import config
@@ -31,7 +32,6 @@ class ButtonBot:
 
         # Клавиатуры:
 
-
         self.keyboard_kapiton = InlineKeyboardMarkup(
             inline_keyboard=[
                 [InlineKeyboardButton(text="Выдать 3 капитона", callback_data="give_3")],
@@ -45,7 +45,8 @@ class ButtonBot:
 
         self.keyboard_lovers = InlineKeyboardMarkup(
             inline_keyboard=[
-                [InlineKeyboardButton(text="Добавить", callback_data="plus"), InlineKeyboardButton(text="Удалить", callback_data="minus")],
+                [InlineKeyboardButton(text="Добавить", callback_data="plus"),
+                 InlineKeyboardButton(text="Удалить", callback_data="minus")],
                 [InlineKeyboardButton(text="Закрыть меню", callback_data="home")],
             ]
         )
@@ -59,7 +60,6 @@ class ButtonBot:
             one_time_keyboard=False  # Скрыть после нажатия
         )
 
-
     def setup_handlers(self):
         """Настраивает обработчики сообщений"""
         # Команда /start
@@ -71,6 +71,10 @@ class ButtonBot:
         self.router.message.register(self.teg_input, StateFilter(BotStates.choosing))
 
         self.router.callback_query.register(self.handle_callback, StateFilter(BotStates.choosing))
+
+        # Обработчик избранного
+        self.router.message.register(self.lovers_work, StateFilter(BotStates.lovers))
+
         self.router.callback_query.register(self.handle_callback_lovers, StateFilter(BotStates.lovers))
 
         # Любое сообщение без состояния
@@ -79,27 +83,47 @@ class ButtonBot:
     async def start(self, message: types.Message, state: FSMContext):
         """Обработчик команды /start"""
 
-        await message.answer("Я РЫЦАРЬ!",reply_markup=self.keyboard_main)
+        await message.answer("Я РЫЦАРЬ!", reply_markup=self.keyboard_main)
         await state.set_state(BotStates.choosing)
 
     async def lovers(self, message: types.Message, state: FSMContext):
         await message.answer("Тут список", reply_markup=self.keyboard_lovers)
         await state.set_state(BotStates.lovers)
+        await state.update_data(act=0)
 
     async def handle_callback_lovers(self, callback: types.CallbackQuery, state: FSMContext):
         if callback.data == "plus":
             await callback.message.edit_text(text="Ведите персонажа которого хотите добавить в избранные :")
-
+            await state.update_data(act=1)
             print("plus")
         elif callback.data == "minus":
             await callback.message.edit_text(text="Ведите персонажа которого хотите удалить из избранных :")
-
+            await state.update_data(act=2)
             print("minus")
         elif callback.data == "home":
             await callback.message.delete()
             print("home")
             await state.set_state(BotStates.choosing)
         await callback.answer()
+
+    async def lovers_work(self, message: types.Message, state: FSMContext):
+        data = await state.get_data()
+        if data["act"] == 0 or message.text[0] != "@":
+            await message.answer("И чё ты хочешь?")
+        elif data["act"] == 1:
+            await message.answer(f"Пользователь {message.text} добавлен в избранные")
+            await state.set_state(BotStates.choosing)
+        elif data["act"] == 2:
+            await message.answer(f"Пользователь {message.text} удалён из избранных.")
+            await state.set_state(BotStates.choosing)
+
+    async def solo_statistic(self, message: types.Message, state: FSMContext):
+        """показ статистики для одного пользователя"""
+        print(123)
+
+    async def full_statistic(self, message: types.Message, state: FSMContext):
+        """показывает весь рейтинг и место пользователя в нём"""
+        print(321)
 
     async def teg_input(self, message: types.Message, state: FSMContext):
         text = message.text
@@ -108,7 +132,6 @@ class ButtonBot:
             await message.answer(f"Что сделать с этим {text} ?", reply_markup=self.keyboard_kapiton)
         else:
             await message.answer("Что ты несёшь!?")
-
 
     async def handle_callback(self, callback: types.CallbackQuery):
         """Обработчик нажатий на инлайн-кнопки"""
@@ -141,9 +164,6 @@ class ButtonBot:
         """Запускает бота"""
         print("Бот запущен на aiogram...")
         await self.dp.start_polling(self.bot)
-
-
-
 
 
 if __name__ == '__main__':
