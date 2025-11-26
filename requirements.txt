@@ -1,3 +1,4 @@
+python-dotenv
 aiogram==3.22.0
-python-dotenv==1.0.0
 aioodbc==0.5.0
+requests==2.32.5

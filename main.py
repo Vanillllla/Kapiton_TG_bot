@@ -75,6 +75,8 @@ class ButtonBot:
         # Обработка кнопок в состоянии choosing
         self.router.message.register(self.info, F.text == "Информация", StateFilter(BotStates.choosing))
         self.router.message.register(self.lovers, F.text == "Избранные", StateFilter(BotStates.choosing))
+        self.router.message.register(self.my_statistic, F.text == "Моя статистика", StateFilter(BotStates.choosing))
+        self.router.message.register(self.any_statistic, F.text == "Общая статистика", StateFilter(BotStates.choosing))
         self.router.message.register(self.teg_input, StateFilter(BotStates.choosing))
 
         self.router.callback_query.register(self.handle_callback, StateFilter(BotStates.choosing))
@@ -157,8 +159,11 @@ class ButtonBot:
     async def teg_input(self, message: types.Message, state: FSMContext):
         text = message.text
         if text[0] == "@":
-            print(text, message.from_user.full_name)
-            await message.answer(f"Что сделать с этим {text} ?", reply_markup=self.keyboard_kapiton)
+
+            if message.from_user.username == message.text[1::]:
+                await message.answer(f"Нельзя выдать <b>капитоны</b> себе", parse_mode="html")
+            else:
+                await message.answer(f"Что сделать с этим {text} ?", reply_markup=self.keyboard_kapiton)
         else:
             await message.answer("И чё ты хочешь? Напиши телеграм ник пользователя, например: @Kapiton_TG_bot")
 
@@ -169,13 +174,13 @@ class ButtonBot:
             await db.add_coins(1, callback.message.chat.id)
         elif callback.data == "give_3":
             await callback.message.edit_text("<b>Выдано</b> 3 капитона! ", parse_mode="html")
-
+            await db.add_coins(3, callback.message.chat.id)
         elif callback.data == "take_1":
             await callback.message.edit_text("<b>Изнят</b> 1 капитон!", parse_mode="html")
-
+            await db.add_coins(-1, callback.message.chat.id)
         elif callback.data == "take_2":
             await callback.message.edit_text("<b>Изнято</b> 2 капитона!", parse_mode="html")
-
+            await db.add_coins(-2, callback.message.chat.id)
         elif callback.data == "otmena":
             await callback.message.edit_text("ок...")
 
@@ -183,8 +188,14 @@ class ButtonBot:
 
     async def info(self, message: types.Message, state: FSMContext):
         """Обработчик кнопки Информация"""
-        await message.answer("*ПОЛЕЗНАЯ ИНФОРМАЦИЯ*")
-        print("info")
+        await message.answer("*ПОЛЕЗНАЯ ИНФОРМАЦИЯ*\n"
+                             "\n"
+                             f"Версия сборки: {config.GIT_LAST_COMMIT_NAME}")
+    async def my_statistic(self, message: types.Message, state: FSMContext):
+        print("my_statistic")
+
+    async def any_statistic(self, message: types.Message, state: FSMContext):
+        print("any_statistic")
 
     async def any_message(self, message: types.Message):
         """Обработчик любого сообщения без состояния"""

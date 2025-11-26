@@ -195,3 +195,4 @@ class DataWork:
                     return {row[0]: row[1] for row in lovers_data}
 
                 return {}
+

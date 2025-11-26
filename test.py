@@ -5,17 +5,9 @@ db = DataWork()
 
 async def main():
     await db.connect()
-    users = await db.execute_query("SELECT id, telegram_id FROM users")
 
-    users = await db.execute_query("SELECT id, telegram_id FROM users")
-    print(users)
+    await db.registration_user("Kapiton_TG_bot",8561660959)
 
-    users = await db.execute_query("SELECT id, telegram_id FROM users")
-    print(users)
-    users = await db.execute_query("SELECT id, telegram_id FROM users")
-    print(users)
-    users = await db.execute_query("SELECT id, telegram_id FROM users")
-    print(users)
     await db.close()
 
 if __name__ == "__main__":

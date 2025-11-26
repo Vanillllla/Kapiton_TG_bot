@@ -1,5 +1,7 @@
 import os
 from dotenv import load_dotenv
+import requests
+
 
 # Загружаем переменные из .env файла
 load_dotenv()
@@ -14,6 +16,25 @@ class Config:
     SQL_DATABASE = os.getenv("SQL_DATABASE")
     SQL_USER = os.getenv("SQL_USER")
     SQL_PASSWORD = os.getenv("SQL_PASSWORD")
+
+    GIT_OWNER = os.getenv("GIT_OWNER")
+    GIT_REPO = os.getenv("GIT_REPO")
+
+    url = f"https://api.github.com/repos/{GIT_OWNER}/{GIT_REPO}/commits"
+
+    try:
+        response = requests.get(url)
+        response.raise_for_status()
+
+        commits = response.json()
+        if commits:
+            GIT_LAST_COMMIT_NAME = commits[0]['commit']['message']
+        else:
+            print("Репозиторий не содержит коммитов")
+
+
+    except:
+        print(f"Ошибка при запросе к GitHub API: {{}}")
 
 
     @classmethod
