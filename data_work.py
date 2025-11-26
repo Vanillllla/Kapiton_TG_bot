@@ -196,3 +196,21 @@ class DataWork:
 
                 return {}
 
+    async def user_statistic(self, telegram_id: int) -> tuple:
+        """Возвращает статистику пользователя (coins, limits) по telegram_id"""
+        if not self.pool:
+            raise ConnectionError("Пул подключений не инициализирован. Вызовите connect() перед использованием.")
+
+        async with self.pool.acquire() as conn:
+            async with conn.cursor() as cur:
+                await cur.execute(
+                    "SELECT coins, limits FROM users WHERE telegram_id = ?",
+                    (telegram_id,)
+                )
+                user_data = await cur.fetchone()
+
+                if not user_data:
+                    raise ValueError(f"Пользователь с telegram_id {telegram_id} не найден")
+
+                coins, limits = user_data
+                return coins, limits

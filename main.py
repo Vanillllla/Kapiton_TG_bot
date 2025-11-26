@@ -192,7 +192,9 @@ class ButtonBot:
                              "\n"
                              f"Версия сборки: {config.GIT_LAST_COMMIT_NAME}")
     async def my_statistic(self, message: types.Message, state: FSMContext):
-
+        user_data = await db.user_statistic(message.from_user.id)
+        await message.answer(f"Ваш баланс <b>капитонов</b>: {user_data[0]}\n\n"
+                             f"Ваш лимит отправки <b>капитонов</b> на сегодня: {user_data[1]}", parse_mode="html")
         print("my_statistic")
 
     async def any_statistic(self, message: types.Message, state: FSMContext):
