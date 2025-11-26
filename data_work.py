@@ -38,15 +38,33 @@ class DataWork:
             await self.pool.wait_closed()
             print("Пул подключений закрыт")
 
-    async def add_coins(self, amount: int, user_name: str) -> None:
+    async def add_coins(self, amount: int, telegram_id: int) -> None:
         """Добавление койнов пользователю"""
         if not self.pool:
             raise ConnectionError("Пул подключений не инициализирован. Вызовите connect() перед использованием.")
 
-        query = "UPDATE users SET coins = coins + ? WHERE user_name = ?"
+        query = "UPDATE users SET coins = coins + ? WHERE telegram_id = ?"
 
         async with self.pool.acquire() as conn:
             async with conn.cursor() as cur:
-                await cur.execute(query, (amount, user_name))
+                await cur.execute(query, (amount, telegram_id))
                 if cur.rowcount == 0:
-                    raise ValueError(f"Пользователь с именем '{user_name}' не найден")
+                    raise ValueError(f"Пользователь '{telegram_id}' не найден")
+
+    async def registration_user(self, user_name: str, telegram_id: int) -> None:
+        """Проверяет наличие пользователя по telegram_id и добавляет если не найден"""
+        if not self.pool:
+            raise ConnectionError("Пул подключений не инициализирован. Вызовите connect() перед использованием.")
+
+        query = """
+            MERGE users AS target
+            USING (SELECT ? AS user_name, ? AS telegram_id) AS source
+            ON target.telegram_id = source.telegram_id
+            WHEN NOT MATCHED THEN
+                INSERT (user_name, telegram_id) 
+                VALUES (source.user_name, source.telegram_id);
+        """
+
+        async with self.pool.acquire() as conn:
+            async with conn.cursor() as cur:
+                await cur.execute(query, (user_name, telegram_id))

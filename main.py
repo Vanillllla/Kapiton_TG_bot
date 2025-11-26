@@ -93,8 +93,8 @@ class ButtonBot:
 
     async def start(self, message: types.Message, state: FSMContext):
         """Обработчик команды /start"""
-
         await message.answer("Я РЫЦАРЬ!", reply_markup=self.keyboard_main)
+        await db.registration_user(message.from_user.username, message.from_user.id)
         await state.set_state(BotStates.choosing)
 
     async def to_home(self, callback: types.CallbackQuery, state: FSMContext):
@@ -155,10 +155,7 @@ class ButtonBot:
         """Обработчик нажатий на инлайн-кнопки"""
         if callback.data == "give_1":
             await callback.message.edit_text("<b>Выдан</b> 1 капитон! ", parse_mode="html")
-            print(callback.message.from_user.username, callback.message.from_user.full_name, callback.message.from_user.id)
-            print(callback.message.chat.id)
-
-            db.add_coins(1, callback.message.from_user.username)
+            await db.add_coins(1, callback.message.chat.id)
         elif callback.data == "give_3":
             await callback.message.edit_text("<b>Выдано</b> 3 капитона! ", parse_mode="html")
 
