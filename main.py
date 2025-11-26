@@ -108,9 +108,9 @@ class ButtonBot:
 
     async def lovers(self, message: types.Message, state: FSMContext):
 
+        # генератор кастомной инлайн клавиатуры с избранными пользователями
 
-
-        await message.answer("Тут список", reply_markup=self.keyboard_lovers)
+        await message.answer("Избранные: (в разработке)", reply_markup=self.keyboard_lovers)
         await state.set_state(BotStates.lovers_1)
         await state.update_data(act=0)
 
@@ -188,13 +188,15 @@ class ButtonBot:
 
     async def info(self, message: types.Message, state: FSMContext):
         """Обработчик кнопки Информация"""
-        await message.answer("*ПОЛЕЗНАЯ ИНФОРМАЦИЯ*\n"
+        await message.answer("*ПОЛЕЗНАЯ ИНФОРМАЦИЯ* (в разработке)\n"
                              "\n"
                              f"Версия сборки: {config.GIT_LAST_COMMIT_NAME}")
     async def my_statistic(self, message: types.Message, state: FSMContext):
+
         print("my_statistic")
 
     async def any_statistic(self, message: types.Message, state: FSMContext):
+        await message.answer("*Общая статистика* (в разработке)")
         print("any_statistic")
 
     async def any_message(self, message: types.Message):
