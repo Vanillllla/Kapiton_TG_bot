@@ -38,18 +38,18 @@ class DataWork:
             await self.pool.wait_closed()
             print("Пул подключений закрыт")
 
-    async def add_coins(self, amount: int, telegram_id: int) -> None:
+    async def add_coins(self, amount: int, user_name: str) -> None:
         """Добавление койнов пользователю"""
         if not self.pool:
             raise ConnectionError("Пул подключений не инициализирован. Вызовите connect() перед использованием.")
 
-        query = "UPDATE users SET coins = coins + ? WHERE telegram_id = ?"
+        query = "UPDATE users SET coins = coins + ? WHERE user_name = ?"
 
         async with self.pool.acquire() as conn:
             async with conn.cursor() as cur:
-                await cur.execute(query, (amount, telegram_id))
+                await cur.execute(query, (amount, user_name))
                 if cur.rowcount == 0:
-                    raise ValueError(f"Пользователь '{telegram_id}' не найден")
+                    raise ValueError(f"Пользователь '{user_name}' не найден")
 
     async def registration_user(self, user_name: str, telegram_id: int) -> None:
         """Регистрирует пользователя или обновляет telegram_id если user_name существует"""

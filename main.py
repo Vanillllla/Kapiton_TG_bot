@@ -164,25 +164,28 @@ class ButtonBot:
                 await message.answer(f"Нельзя выдать <b>капитоны</b> себе", parse_mode="html")
             else:
                 await message.answer(f"Что сделать с этим {text} ?", reply_markup=self.keyboard_kapiton)
+                await state.update_data(user=message.text[1::])
         else:
             await message.answer("И чё ты хочешь? Напиши телеграм ник пользователя, например: @Kapiton_TG_bot")
 
-    async def handle_callback(self, callback: types.CallbackQuery):
+    async def handle_callback(self, callback: types.CallbackQuery, state: FSMContext):
         """Обработчик нажатий на инлайн-кнопки"""
+        data = await state.get_data()
         if callback.data == "give_1":
             await callback.message.edit_text("<b>Выдан</b> 1 капитон! ", parse_mode="html")
-            await db.add_coins(1, callback.message.chat.id)
+            await db.add_coins(1, data["user"])
         elif callback.data == "give_3":
             await callback.message.edit_text("<b>Выдано</b> 3 капитона! ", parse_mode="html")
-            await db.add_coins(3, callback.message.chat.id)
+            await db.add_coins(3, data["user"])
         elif callback.data == "take_1":
             await callback.message.edit_text("<b>Изнят</b> 1 капитон!", parse_mode="html")
-            await db.add_coins(-1, callback.message.chat.id)
+            await db.add_coins(-1, data["user"])
         elif callback.data == "take_2":
             await callback.message.edit_text("<b>Изнято</b> 2 капитона!", parse_mode="html")
-            await db.add_coins(-2, callback.message.chat.id)
+            await db.add_coins(-2, data["user"])
         elif callback.data == "otmena":
             await callback.message.edit_text("ок...")
+        await state.clear()
 
         await callback.answer()
 
