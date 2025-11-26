@@ -38,62 +38,15 @@ class DataWork:
             await self.pool.wait_closed()
             print("Пул подключений закрыт")
 
-    async def execute_query(self, query: str, params: tuple = None) -> List[Tuple]:
-        """Выполнение SELECT запроса"""
+    async def add_coins(self, amount: int, user_name: str) -> None:
+        """Добавление койнов пользователю"""
+        if not self.pool:
+            raise ConnectionError("Пул подключений не инициализирован. Вызовите connect() перед использованием.")
+
+        query = "UPDATE users SET coins = coins + ? WHERE user_name = ?"
+
         async with self.pool.acquire() as conn:
             async with conn.cursor() as cur:
-                try:
-                    if params:
-                        await cur.execute(query, params)
-                    else:
-                        await cur.execute(query)
-
-                    result = await cur.fetchall()
-                    return result
-                except Exception as e:
-                    print(f"Ошибка выполнения запроса: {e}")
-                    raise
-
-    async def execute_command(self, command: str, params: tuple = None) -> int:
-        """Выполнение INSERT/UPDATE/DELETE команды"""
-        async with self.pool.acquire() as conn:
-            async with conn.cursor() as cur:
-                try:
-                    if params:
-                        await cur.execute(command, params)
-                    else:
-                        await cur.execute(command)
-
-                    # Возвращаем количество затронутых строк
-                    return cur.rowcount
-                except Exception as e:
-                    print(f"Ошибка выполнения команды: {e}")
-                    await conn.rollback()
-                    raise
-
-    async def execute_scalar(self, query: str, params: tuple = None) -> Any:
-        """Выполнение запроса с возвратом одного значения"""
-        async with self.pool.acquire() as conn:
-            async with conn.cursor() as cur:
-                try:
-                    if params:
-                        await cur.execute(query, params)
-                    else:
-                        await cur.execute(query)
-
-                    result = await cur.fetchone()
-                    return result[0] if result else None
-                except Exception as e:
-                    print(f"Ошибка выполнения скалярного запроса: {e}")
-                    raise
-
-    async def get_columns(self, table_name: str) -> List[str]:
-        """Получение списка колонок таблицы"""
-        query = """
-                SELECT COLUMN_NAME
-                FROM INFORMATION_SCHEMA.COLUMNS
-                WHERE TABLE_NAME = ?
-                ORDER BY ORDINAL_POSITION \
-                """
-        result = await self.execute_query(query, (table_name,))
-        return [row[0] for row in result] if result else []
+                await cur.execute(query, (amount, user_name))
+                if cur.rowcount == 0:
+                    raise ValueError(f"Пользователь с именем '{user_name}' не найден")
