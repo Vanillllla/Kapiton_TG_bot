@@ -16,7 +16,7 @@ class BotStates(StatesGroup):
     """Состояния бота"""
     choosing = State()
     lovers = State()
-
+    lovers_1 = State()
 
 class ButtonBot:
     def __init__(self):
@@ -66,11 +66,11 @@ class ButtonBot:
             resize_keyboard=True,  # Подгонка под размер
             one_time_keyboard=False  # Скрыть после нажатия
         )
-
     def setup_handlers(self):
         """Настраивает обработчики сообщений"""
-        # Команда /start
+        # Команда /start, /menu
         self.router.message.register(self.start, Command("start"))
+        self.router.message.register(self.to_home, Command("menu"))
 
         # Обработка кнопок в состоянии choosing
         self.router.message.register(self.info, F.text == "Информация", StateFilter(BotStates.choosing))
@@ -84,8 +84,9 @@ class ButtonBot:
         self.router.message.register(self.lovers_work, StateFilter(BotStates.lovers))
 
         self.router.callback_query.register(self.to_home, F.data == "to_home", StateFilter(BotStates.lovers))
-        self.router.callback_query.register(self.handle_callback_lovers, StateFilter(BotStates.lovers))
+        self.router.callback_query.register(self.handle_callback_lovers, StateFilter(BotStates.lovers_1))
 
+        self.router.message.register(self.help_lovers, StateFilter(BotStates.lovers_1))
 
         # Любое сообщение без состояния
 
@@ -98,14 +99,17 @@ class ButtonBot:
         await state.set_state(BotStates.choosing)
 
     async def to_home(self, callback: types.CallbackQuery, state: FSMContext):
-        print(123)
         await state.clear()
         await state.set_state(BotStates.choosing)
         await callback.answer("Вы в главном меню:", reply_markup=self.keyboard_main)
         await callback.message.delete()
 
     async def lovers(self, message: types.Message, state: FSMContext):
+
+
+
         await message.answer("Тут список", reply_markup=self.keyboard_lovers)
+        await state.set_state(BotStates.lovers_1)
         await state.update_data(act=0)
 
     async def handle_callback_lovers(self, callback: types.CallbackQuery, state: FSMContext):
@@ -126,7 +130,7 @@ class ButtonBot:
 
         data = await state.get_data()
         if data["act"] == 0 or message.text[0] != "@":
-            await message.answer("И чё ты хочешь? Напиши телеграм ник пользователя, например: \"@Kapiton_TG_bot\"")
+            await message.answer("И чё ты хочешь? Напиши телеграм ник пользователя, например: @Kapiton_TG_bot")
         elif data["act"] == 1:
             await message.answer(f"Пользователь {message.text} добавлен в избранные", reply_markup=self.keyboard_main)
             await state.set_state(BotStates.choosing)
@@ -134,6 +138,13 @@ class ButtonBot:
             await message.answer(f"Пользователь {message.text} удалён из избранных.", reply_markup=self.keyboard_main)
             await state.set_state(BotStates.choosing)
 
+    async def help_lovers(self,message: types.Message, state: FSMContext):
+        if message.text[0] == "@":
+            await state.set_state(BotStates.choosing)
+            await self.teg_input(message, state)
+        else:
+            await message.answer("Выбери действие или пользователя")
+        return
 
     async def solo_statistic(self, message: types.Message, state: FSMContext):
         """показ статистики для одного пользователя"""
@@ -149,7 +160,7 @@ class ButtonBot:
             print(text, message.from_user.full_name)
             await message.answer(f"Что сделать с этим {text} ?", reply_markup=self.keyboard_kapiton)
         else:
-            await message.answer("Что ты несёшь!?")
+            await message.answer("И чё ты хочешь? Напиши телеграм ник пользователя, например: @Kapiton_TG_bot")
 
     async def handle_callback(self, callback: types.CallbackQuery):
         """Обработчик нажатий на инлайн-кнопки"""
