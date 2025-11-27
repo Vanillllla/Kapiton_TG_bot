@@ -225,6 +225,7 @@ class ButtonBot:
         await message.answer("*ПОЛЕЗНАЯ ИНФОРМАЦИЯ* (в разработке)\n"
                              "<b>Для начала : </b>просто введите ник (в формате @Kapiton_TG_bot) пользователя которому хотите выдать капитоны, и выберите нужный параметр в предложенном меню.\n"
                              "<b>Лимит</b> - это количество капитонов которые вы можете выдать в день\n"
+                             "<b>Избранные</b> - вы можете добавить пользователя чтобы иметь быстрый способ выдать капитоны\n"
                              "\n"
                              f"Версия сборки: {config.GIT_LAST_COMMIT_NAME} \n"
                              f"Поставьте звёздочку на git пжпжпж!!!", reply_markup=InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="Сылка на github", url=config.GIT_URL)],]), parse_mode="html")
