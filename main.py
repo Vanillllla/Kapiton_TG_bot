@@ -148,6 +148,8 @@ class ButtonBot:
         data = await state.get_data()
         if data["act"] == 0 or message.text[0] != "@":
             await message.answer("И чё ты хочешь? Напиши телеграм ник пользователя, например: @Kapiton_TG_bot")
+        elif message.text[1::] == message.from_user.username:
+            await message.answer("Тебе зачем добавлять себя в избранные?")
         elif data["act"] == 1:
             await message.answer(f"Пользователь {message.text} добавлен в избранные", reply_markup=self.keyboard_main)
             await db.add_lovers(message.text[1::],message.from_user.username)
