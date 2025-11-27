@@ -20,6 +20,8 @@ class Config:
     GIT_OWNER = os.getenv("GIT_OWNER")
     GIT_REPO = os.getenv("GIT_REPO")
 
+    ADMINS = tuple(os.getenv("ADMINS").split(',')) if os.getenv("ADMINS") else ()
+
     GIT_URL = f"https://github.com/{GIT_OWNER}/{GIT_REPO}"
     GIT_URL_COMMITS = f"https://api.github.com/repos/{GIT_OWNER}/{GIT_REPO}/commits"
     try:

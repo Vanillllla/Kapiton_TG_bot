@@ -242,3 +242,29 @@ class DataWork:
 
                 coins, limits = user_data
                 return coins, limits
+
+    async def edit_limits(self, amount: int, telegram_id: int) -> None:
+        """Изменяет лимиты пользователя по telegram_id"""
+        if not self.pool:
+            raise ConnectionError("Пул подключений не инициализирован. Вызовите connect() перед использованием.")
+
+        async with self.pool.acquire() as conn:
+            async with conn.cursor() as cur:
+                # Проверяем существование пользователя
+                await cur.execute(
+                    "SELECT id, limits FROM users WHERE telegram_id = ?",
+                    (telegram_id,)
+                )
+                existing_user = await cur.fetchone()
+
+                if existing_user:
+                    user_id, current_limits = existing_user
+                    # Обновляем limits пользователю
+                    await cur.execute(
+                        "UPDATE users SET limits = limits + ? WHERE telegram_id = ?",
+                        (amount, telegram_id)
+                    )
+                    print(
+                        f"Добавлено {amount} к лимитам пользователя с telegram_id {telegram_id}. Теперь лимиты: {current_limits + amount}")
+                else:
+                    raise ValueError(f"Пользователь с telegram_id {telegram_id} не найден")

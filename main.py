@@ -71,6 +71,7 @@ class ButtonBot:
         # Команда /start, /menu
         self.router.message.register(self.start, Command("start"))
         self.router.message.register(self.to_home, Command("menu"))
+        self.router.message.register(self.admin, Command("admin"))
 
         # Обработка кнопок в состоянии choosing
         self.router.message.register(self.info, F.text == "Информация", StateFilter(BotStates.choosing))
@@ -171,20 +172,31 @@ class ButtonBot:
     async def handle_callback(self, callback: types.CallbackQuery, state: FSMContext):
         """Обработчик нажатий на инлайн-кнопки"""
         data = await state.get_data()
-        if callback.data == "give_1":
-            await callback.message.edit_text("<b>Выдан</b> 1 капитон! ", parse_mode="html")
-            await db.add_coins(1, data["user"])
-        elif callback.data == "give_3":
-            await callback.message.edit_text("<b>Выдано</b> 3 капитона! ", parse_mode="html")
-            await db.add_coins(3, data["user"])
-        elif callback.data == "take_1":
-            await callback.message.edit_text("<b>Изнят</b> 1 капитон!", parse_mode="html")
-            await db.add_coins(-1, data["user"])
-        elif callback.data == "take_2":
-            await callback.message.edit_text("<b>Изнято</b> 2 капитона!", parse_mode="html")
-            await db.add_coins(-2, data["user"])
-        elif callback.data == "otmena":
+        user_data = await db.user_statistic(callback.message.chat.id)
+        if callback.data == "otmena":
             await callback.message.edit_text("ок...")
+            return
+        if user_data[1] >= int(callback.data[5]):
+            if callback.data == "give_1":
+                await callback.message.edit_text("<b>Выдан</b> 1 капитон! ", parse_mode="html")
+                await db.add_coins(1, data["user"])
+                await db.edit_limits(-1, callback.message.chat.id)
+            elif callback.data == "give_3":
+                await callback.message.edit_text("<b>Выдано</b> 3 капитона! ", parse_mode="html")
+                await db.add_coins(3, data["user"])
+                await db.edit_limits(-3, callback.message.chat.id)
+            elif callback.data == "take_1":
+                await callback.message.edit_text("<b>Изнят</b> 1 капитон!", parse_mode="html")
+                await db.add_coins(-1, data["user"])
+                await db.edit_limits(-1, callback.message.chat.id)
+            elif callback.data == "take_2":
+                await callback.message.edit_text("<b>Изнято</b> 2 капитона!", parse_mode="html")
+                await db.add_coins(-2, data["user"])
+                await db.edit_limits(-1, callback.message.chat.id)
+
+        else:
+            await callback.message.edit_text("У вас закончился лимит выдачи капитонов на сегодня! ", parse_mode="html")
+
         await state.clear()
         await state.set_state(BotStates.choosing)
 
@@ -193,11 +205,11 @@ class ButtonBot:
     async def info(self, message: types.Message, state: FSMContext):
         """Обработчик кнопки Информация"""
         await message.answer("*ПОЛЕЗНАЯ ИНФОРМАЦИЯ* (в разработке)\n"
-                             "Просто введите ник (в формате @Kapiton_TG_bot) пользователя которому хотите выдать капитоны, и выберите нужный параметр в предложенном меню.\n"
-                             "Лимит - это количество капитонов которые вы можете выдать в день\n"
+                             "<b>Для начала : </b>просто введите ник (в формате @Kapiton_TG_bot) пользователя которому хотите выдать капитоны, и выберите нужный параметр в предложенном меню.\n"
+                             "<b>Лимит</b> - это количество капитонов которые вы можете выдать в день\n"
                              "\n"
                              f"Версия сборки: {config.GIT_LAST_COMMIT_NAME} \n"
-                             f"Дайте звёздочку на git пжпжпж", reply_markup=InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="Сылка на github", url=config.GIT_URL)],]))
+                             f"Поставьте звёздочку на git пжпжпж!!!", reply_markup=InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="Сылка на github", url=config.GIT_URL)],]), parse_mode="html")
     async def my_statistic(self, message: types.Message, state: FSMContext):
         user_data = await db.user_statistic(message.from_user.id)
         await message.answer(f"Ваш баланс <b>капитонов</b>: {user_data[0]}\n\n"
@@ -207,6 +219,13 @@ class ButtonBot:
     async def any_statistic(self, message: types.Message, state: FSMContext):
         await message.answer("*Общая статистика* (в разработке)")
         print("any_statistic")
+
+    async def admin(self, message: types.Message, state: FSMContext):
+        if str(message.from_user.id) in config.ADMINS:
+            await db.edit_limits(5, message.from_user.id)
+        else:
+            await message.answer("А чё тебе здесь надо?")
+
 
     async def any_message(self, message: types.Message):
         """Обработчик любого сообщения без состояния"""
