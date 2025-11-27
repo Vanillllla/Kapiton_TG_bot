@@ -135,9 +135,9 @@ class DataWork:
 
                 try:
                     # Проверяем существование пользователя user_name_to_love
-                    await cur.execute("SELECT user_name FROM users WHERE user_name = ?", (user_name_to_love,))
+                    await cur.execute("SELECT id FROM users WHERE user_name = ?", (user_name_to_love,))
                     target_user = await cur.fetchone()
-                    print(target_user)
+
                     if not target_user:
                         # Создаем нового пользователя если не существует
                         await cur.execute(
@@ -147,7 +147,6 @@ class DataWork:
                         # Получаем ID нового пользователя
                         await cur.execute("SELECT id FROM users WHERE user_name = ?", (user_name_to_love,))
                         target_user_id = (await cur.fetchone())[0]
-                        print("target_user",target_user_id)
                     else:
                         target_user_id = target_user[0]
 
