@@ -332,3 +332,18 @@ class DataWork:
                         f"Добавлено {amount} к лимитам пользователя с telegram_id {telegram_id}. Теперь лимиты: {current_limits + amount}")
                 else:
                     raise ValueError(f"Пользователь с telegram_id {telegram_id} не найден")
+
+    async def get_toplist(self) -> dict:
+        """Возвращает топ-5 пользователей с наибольшим количеством coins"""
+        if not self.pool:
+            raise ConnectionError("Пул подключений не инициализирован. Вызовите connect() перед использованием.")
+
+        async with self.pool.acquire() as conn:
+            async with conn.cursor() as cur:
+                await cur.execute(
+                    "SELECT TOP 5 user_name, coins FROM users ORDER BY coins DESC"
+                )
+                top_users = await cur.fetchall()
+
+                # Формируем словарь {user_name: coins}
+                return {row[0]: row[1] for row in top_users}

@@ -237,8 +237,11 @@ class ButtonBot:
 
     async def any_statistic(self, message: types.Message, state: FSMContext):
         """показывает весь рейтинг и место пользователя в нём"""
-        await message.answer("*Общая статистика* (в разработке)")
-        print("any_statistic")
+        statistic = await db.get_toplist()
+        await message.answer(
+            "<b>ТОП ЛИСТ ПО КАПИТОНАМ</b>: \n\n" +
+            ''.join(f"{i}) <b>{v}</b> - @{k.rstrip()}\n" for i, (k, v) in enumerate(statistic.items(), start=1)),
+            parse_mode="html")
 
     async def admin(self, message: types.Message, state: FSMContext):
         if str(message.from_user.id) in config.ADMINS:
