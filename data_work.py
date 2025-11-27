@@ -135,9 +135,9 @@ class DataWork:
 
                 try:
                     # Проверяем существование пользователя user_name_to_love
-                    await cur.execute("SELECT id FROM users WHERE user_name = ?", (user_name_to_love,))
+                    await cur.execute("SELECT user_name FROM users WHERE user_name = ?", (user_name_to_love,))
                     target_user = await cur.fetchone()
-
+                    print(target_user)
                     if not target_user:
                         # Создаем нового пользователя если не существует
                         await cur.execute(
@@ -145,8 +145,9 @@ class DataWork:
                             (user_name_to_love,)
                         )
                         # Получаем ID нового пользователя
-                        await cur.execute("SELECT SCOPE_IDENTITY()")
+                        await cur.execute("SELECT id FROM users WHERE user_name = ?", (user_name_to_love,))
                         target_user_id = (await cur.fetchone())[0]
+                        print("target_user",target_user_id)
                     else:
                         target_user_id = target_user[0]
 
@@ -249,7 +250,7 @@ class DataWork:
                     raise e
 
     async def get_lovers(self, telegram_id: int) -> dict:
-        """Возвращает словарь всех lovers пользователя"""
+        """Возвращает словарь всех lovers пользователя, где ключ - user_name, значение - telegram_id"""
         if not self.pool:
             raise ConnectionError("Пул подключений не инициализирован. Вызовите connect() перед использованием.")
 
@@ -275,15 +276,15 @@ class DataWork:
                     # Создаем placeholders для запроса
                     placeholders = ','.join('?' * len(lover_ids))
                     query = f"""
-                        SELECT telegram_id, user_name 
+                        SELECT user_name, telegram_id 
                         FROM users 
                         WHERE id IN ({placeholders})
                     """
 
                     await cur.execute(query, lover_ids)
                     lovers_data = await cur.fetchall()
-
-                    # Формируем словарь {telegram_id: user_name}
+                    print(lovers_data)
+                    # Формируем словарь {user_name: telegram_id}
                     return {row[0]: row[1] for row in lovers_data}
 
                 return {}
