@@ -195,7 +195,8 @@ class ButtonBot:
                              "Просто введите ник (в формате @Kapiton_TG_bot) пользователя которому хотите выдать капитоны, и выберите нужный параметр в предложенном меню.\n"
                              "Лимит - это количество капитонов которые вы можете выдать в день\n"
                              "\n"
-                             f"Версия сборки: {config.GIT_LAST_COMMIT_NAME}")
+                             f"Версия сборки: {config.GIT_LAST_COMMIT_NAME} \n"
+                             f"Дайте звёздочку на git пжпжпж", reply_markup=InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="Сылка на github", url=config.GIT_URL)],]))
     async def my_statistic(self, message: types.Message, state: FSMContext):
         user_data = await db.user_statistic(message.from_user.id)
         await message.answer(f"Ваш баланс <b>капитонов</b>: {user_data[0]}\n\n"

@@ -20,10 +20,10 @@ class Config:
     GIT_OWNER = os.getenv("GIT_OWNER")
     GIT_REPO = os.getenv("GIT_REPO")
 
-    url = f"https://api.github.com/repos/{GIT_OWNER}/{GIT_REPO}/commits"
-
+    GIT_URL = f"https://github.com/{GIT_OWNER}/{GIT_REPO}"
+    GIT_URL_COMMITS = f"https://api.github.com/repos/{GIT_OWNER}/{GIT_REPO}/commits"
     try:
-        response = requests.get(url)
+        response = requests.get(GIT_URL_COMMITS)
         response.raise_for_status()
 
         commits = response.json()
