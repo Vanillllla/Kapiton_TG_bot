@@ -1,4 +1,5 @@
 import asyncio
+import copy
 
 from aiogram import Bot, Dispatcher, types, F, Router
 from aiogram.filters import Command, StateFilter
@@ -7,6 +8,7 @@ from aiogram.fsm.state import State, StatesGroup
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, ReplyKeyboardRemove, InlineKeyboardMarkup, \
     InlineKeyboardButton
 from aiogram.utils.keyboard import ReplyKeyboardBuilder
+from pyexpat.errors import messages
 
 from config import config
 from data_work import DataWork
@@ -108,10 +110,13 @@ class ButtonBot:
         await callback.message.delete()
 
     async def lovers(self, message: types.Message, state: FSMContext):
+        lovers = await db.get_lovers(message.from_user.id)
 
-        # генератор кастомной инлайн клавиатуры с избранными пользователями
+        keyboard_list_lovers = copy.deepcopy(self.keyboard_lovers)
+        print([[InlineKeyboardButton(text=key.rstrip(),callback_data=f"@{key.rstrip()}")] for key in lovers.keys()])
+        keyboard_list_lovers.inline_keyboard[0:0] = [[InlineKeyboardButton(text=key.rstrip(),callback_data=f"@{key.rstrip()}")] for key in lovers.keys()]
 
-        await message.answer("Избранные: (в разработке)"+f"{await db.get_lovers(message.from_user.id)}", reply_markup=self.keyboard_lovers)
+        await message.answer("Избранные: (в разработке)", reply_markup=keyboard_list_lovers)
         await state.set_state(BotStates.lovers_1)
         await state.update_data(act=0)
 
@@ -127,6 +132,15 @@ class ButtonBot:
         elif callback.data == "home":
             await callback.message.delete()
             await state.set_state(BotStates.choosing)
+        elif callback.data[0] == "@":
+            await callback.message.delete()
+            # messages2 = copy.deepcopy(callback)
+            # messages2.message.text = callback.data[1:]
+            await state.clear()
+            await state.set_state(BotStates.choosing)
+            await state.update_data(to_user=callback.data[1::])
+            await self.teg_input(callback.message, state)
+            return
         await callback.answer()
 
     async def lovers_work(self, message: types.Message, state: FSMContext):
@@ -155,6 +169,7 @@ class ButtonBot:
 
     async def teg_input(self, message: types.Message, state: FSMContext):
         text = message.text
+        data = await state.get_data()
         if text[0] == "@":
 
             if message.from_user.username == message.text[1::]:
@@ -162,6 +177,13 @@ class ButtonBot:
             else:
                 await message.answer(f"Что сделать с этим {text} ?", reply_markup=self.keyboard_kapiton)
                 await state.update_data(user=message.text[1::])
+
+        elif "to_user" in data:
+            user = data["to_user"]
+
+            await message.answer(f"Что сделать с этим @{user} ?", reply_markup=self.keyboard_kapiton)
+            await state.update_data(user=user)
+
         else:
             await message.answer("И чё ты хочешь? Напиши телеграм ник пользователя, например: @Kapiton_TG_bot")
 
