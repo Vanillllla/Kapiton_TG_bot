@@ -184,6 +184,70 @@ class DataWork:
                     await cur.execute("ROLLBACK")
                     raise e
 
+    async def remove_lovers(self, removable_user_name: str, user_name: str) -> None:
+        """Удаляет пользователя removable_user_name из списка lovers пользователя user_name"""
+        if not self.pool:
+            raise ConnectionError("Пул подключений не инициализирован. Вызовите connect() перед использованием.")
+
+        async with self.pool.acquire() as conn:
+            async with conn.cursor() as cur:
+                # Начинаем транзакцию
+                await cur.execute("BEGIN TRANSACTION")
+
+                try:
+                    # Получаем ID пользователя, которого нужно удалить из lovers
+                    await cur.execute(
+                        "SELECT id FROM users WHERE user_name = ?",
+                        (removable_user_name,)
+                    )
+                    removable_user = await cur.fetchone()
+
+                    if not removable_user:
+                        raise ValueError(f"Пользователь с именем '{removable_user_name}' не найден")
+
+                    removable_user_id = str(removable_user[0])
+
+                    # Получаем текущих lovers для пользователя user_name (он точно существует)
+                    await cur.execute(
+                        "SELECT lovers FROM users WHERE user_name = ?",
+                        (user_name,)
+                    )
+                    user_row = await cur.fetchone()
+                    current_lovers = user_row[0] or ""
+
+                    # Если список пуст, нечего удалять
+                    if not current_lovers:
+                        print(f"Список lovers пользователя {user_name} пуст")
+                        await cur.execute("COMMIT")
+                        return
+
+                    # Разделяем существующих lovers и удаляем нужного
+                    lovers_list = current_lovers.split(',')
+
+                    if removable_user_id not in lovers_list:
+                        print(f"Пользователь {removable_user_name} не найден в списке lovers пользователя {user_name}")
+                        await cur.execute("COMMIT")
+                        return
+
+                    # Удаляем пользователя из списка
+                    lovers_list.remove(removable_user_id)
+
+                    # Формируем новую строку lovers
+                    new_lovers = ','.join(lovers_list)
+
+                    # Обновляем запись
+                    await cur.execute(
+                        "UPDATE users SET lovers = ? WHERE user_name = ?",
+                        (new_lovers, user_name)
+                    )
+
+                    print(f"Пользователь {removable_user_name} удален из списка lovers пользователя {user_name}")
+                    await cur.execute("COMMIT")
+
+                except Exception as e:
+                    await cur.execute("ROLLBACK")
+                    raise e
+
     async def get_lovers(self, telegram_id: int) -> dict:
         """Возвращает словарь всех lovers пользователя"""
         if not self.pool:

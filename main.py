@@ -111,7 +111,7 @@ class ButtonBot:
 
         # генератор кастомной инлайн клавиатуры с избранными пользователями
 
-        await message.answer("Избранные: (в разработке)", reply_markup=self.keyboard_lovers)
+        await message.answer("Избранные: (в разработке)"+f"{await db.get_lovers(message.from_user.id)}", reply_markup=self.keyboard_lovers)
         await state.set_state(BotStates.lovers_1)
         await state.update_data(act=0)
 
@@ -136,9 +136,13 @@ class ButtonBot:
             await message.answer("И чё ты хочешь? Напиши телеграм ник пользователя, например: @Kapiton_TG_bot")
         elif data["act"] == 1:
             await message.answer(f"Пользователь {message.text} добавлен в избранные", reply_markup=self.keyboard_main)
+            await db.add_lovers(message.text[1::],message.from_user.username)
+            await state.clear()
             await state.set_state(BotStates.choosing)
         elif data["act"] == 2:
             await message.answer(f"Пользователь {message.text} удалён из избранных.", reply_markup=self.keyboard_main)
+            await db.remove_lovers(message.text[1::],message.from_user.username)
+            await state.clear()
             await state.set_state(BotStates.choosing)
 
     async def help_lovers(self,message: types.Message, state: FSMContext):
@@ -148,14 +152,6 @@ class ButtonBot:
         else:
             await message.answer("Выбери действие или пользователя")
         return
-
-    async def solo_statistic(self, message: types.Message, state: FSMContext):
-        """показ статистики для одного пользователя"""
-        print(123)
-
-    async def full_statistic(self, message: types.Message, state: FSMContext):
-        """показывает весь рейтинг и место пользователя в нём"""
-        print(321)
 
     async def teg_input(self, message: types.Message, state: FSMContext):
         text = message.text
@@ -211,12 +207,14 @@ class ButtonBot:
                              f"Версия сборки: {config.GIT_LAST_COMMIT_NAME} \n"
                              f"Поставьте звёздочку на git пжпжпж!!!", reply_markup=InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="Сылка на github", url=config.GIT_URL)],]), parse_mode="html")
     async def my_statistic(self, message: types.Message, state: FSMContext):
+        """показ статистики для одного пользователя"""
         user_data = await db.user_statistic(message.from_user.id)
         await message.answer(f"Ваш баланс <b>капитонов</b>: {user_data[0]}\n\n"
                              f"Ваш лимит отправки <b>капитонов</b> на сегодня: {user_data[1]}", parse_mode="html")
         print("my_statistic")
 
     async def any_statistic(self, message: types.Message, state: FSMContext):
+        """показывает весь рейтинг и место пользователя в нём"""
         await message.answer("*Общая статистика* (в разработке)")
         print("any_statistic")
 
