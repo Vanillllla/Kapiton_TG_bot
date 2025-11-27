@@ -39,17 +39,45 @@ class DataWork:
             print("Пул подключений закрыт")
 
     async def add_coins(self, amount: int, user_name: str) -> None:
-        """Добавление койнов пользователю"""
+        """Добавляет коины пользователю. Если пользователя нет, создает его."""
         if not self.pool:
             raise ConnectionError("Пул подключений не инициализирован. Вызовите connect() перед использованием.")
 
-        query = "UPDATE users SET coins = coins + ? WHERE user_name = ?"
-
         async with self.pool.acquire() as conn:
             async with conn.cursor() as cur:
-                await cur.execute(query, (amount, user_name))
-                if cur.rowcount == 0:
-                    raise ValueError(f"Пользователь '{user_name}' не найден")
+                # Начинаем транзакцию
+                await cur.execute("BEGIN TRANSACTION")
+
+                try:
+                    # Проверяем существование пользователя
+                    await cur.execute(
+                        "SELECT id, coins FROM users WHERE user_name = ?",
+                        (user_name,)
+                    )
+                    existing_user = await cur.fetchone()
+
+                    if existing_user:
+                        user_id, current_coins = existing_user
+                        # Обновляем coins существующему пользователю
+                        await cur.execute(
+                            "UPDATE users SET coins = coins + ? WHERE id = ?",
+                            (amount, user_id)
+                        )
+                        print(
+                            f"Добавлено {amount} coins пользователю {user_name}. Теперь у него {current_coins + amount} coins")
+                    else:
+                        # Создаем нового пользователя с указанным количеством coins
+                        await cur.execute(
+                            "INSERT INTO users (user_name, coins, limits, lovers) VALUES (?, ?, 10, '')",
+                            (user_name, amount)
+                        )
+                        print(f"Создан новый пользователь {user_name} с {amount} coins")
+
+                    await cur.execute("COMMIT")
+
+                except Exception as e:
+                    await cur.execute("ROLLBACK")
+                    raise e
 
     async def registration_user(self, user_name: str, telegram_id: int) -> None:
         """Регистрирует пользователя или обновляет telegram_id если user_name существует"""

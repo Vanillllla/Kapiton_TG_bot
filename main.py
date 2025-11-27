@@ -186,6 +186,7 @@ class ButtonBot:
         elif callback.data == "otmena":
             await callback.message.edit_text("ок...")
         await state.clear()
+        await state.set_state(BotStates.choosing)
 
         await callback.answer()
 
