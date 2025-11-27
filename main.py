@@ -192,6 +192,8 @@ class ButtonBot:
     async def info(self, message: types.Message, state: FSMContext):
         """Обработчик кнопки Информация"""
         await message.answer("*ПОЛЕЗНАЯ ИНФОРМАЦИЯ* (в разработке)\n"
+                             "Просто введите ник (в формате @Kapiton_TG_bot) пользователя которому хотите выдать капитоны, и выберите нужный параметр в предложенном меню.\n"
+                             "Лимит - это количество капитонов которые вы можете выдать в день\n"
                              "\n"
                              f"Версия сборки: {config.GIT_LAST_COMMIT_NAME}")
     async def my_statistic(self, message: types.Message, state: FSMContext):
